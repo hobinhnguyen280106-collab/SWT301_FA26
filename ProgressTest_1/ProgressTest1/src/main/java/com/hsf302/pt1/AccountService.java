@@ -4,6 +4,7 @@ import java.time.LocalDate;
 import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Optional;
 
 public class AccountService {
 
@@ -71,10 +72,72 @@ public class AccountService {
         }
         // BR-REG-10
         String salt = PasswordHasher.generateSalt();
-        Account account = new Account(username, email, dateOfBirth, phone,
+        Account account = new Account(username, emailKey, dateOfBirth, phone,
                 salt, PasswordHasher.hash(salt, password));
         accountsByUsername.put(userKey, account);
         usernameByEmail.put(emailKey, userKey);
         return ResultCode.SUCCESS;
+    }
+
+    public ResultCode login(String username, String password) {
+        // BR-LOG-01
+        if (isBlank(username) || isBlank(password)) {
+            return ResultCode.INVALID_INPUT;
+        }
+        // BR-LOG-02, 03 (user không tồn tại)
+        Account account = accountsByUsername.get(key(username));
+        if (account == null) {
+            return ResultCode.INVALID_CREDENTIALS;
+        }
+        // BR-LOG-04
+        if (account.getStatus() == AccountStatus.DISABLED) {
+            return ResultCode.ACCOUNT_DISABLED;
+        }
+        // BR-LOG-06: đang khóa -> từ chối, không tăng bộ đếm
+        if (account.isLocked()) {
+            return ResultCode.ACCOUNT_LOCKED;
+        }
+        // BR-LOG-03, 05: sai mật khẩu
+        if (!PasswordHasher.matches(account.getSalt(), password, account.getCurrentPasswordHash())) {
+            account.incrementFailedAttempts();
+            if (account.getFailedAttempts() >= MAX_FAILED_ATTEMPTS) {
+                account.lock();
+                return ResultCode.ACCOUNT_LOCKED;
+            }
+            return ResultCode.INVALID_CREDENTIALS;
+        }
+        // BR-LOG-08
+        account.resetFailedAttempts();
+        return ResultCode.SUCCESS;
+    }
+
+    public ResultCode disableAccount(String username) {
+        Optional<Account> account = findByUsername(username);
+        if (account.isEmpty()) {
+            return ResultCode.USER_NOT_FOUND;
+        }
+        account.get().setStatus(AccountStatus.DISABLED);
+        return ResultCode.SUCCESS;
+    }
+
+    /** BR-ADM-03: quản trị viên mở khóa tài khoản bị khóa do đăng nhập sai. */
+    public ResultCode unlockAccount(String username) {
+        Optional<Account> account = findByUsername(username);
+        if (account.isEmpty()) {
+            return ResultCode.USER_NOT_FOUND;
+        }
+        account.get().unlock();
+        return ResultCode.SUCCESS;
+    }
+
+    public Optional<Account> findByUsername(String username) {
+        if (isBlank(username)) {
+            return Optional.empty();
+        }
+        return Optional.ofNullable(accountsByUsername.get(key(username)));
+    }
+
+    public boolean isLocked(String username) {
+        return findByUsername(username).map(Account::isLocked).orElse(false);
     }
 }
