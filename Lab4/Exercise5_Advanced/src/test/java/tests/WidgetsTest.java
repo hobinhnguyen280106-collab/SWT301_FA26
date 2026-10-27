@@ -66,4 +66,10 @@ class WidgetsTest extends BaseTest {
         assertEquals("MIDDLE", page.getMiddleFrameText());
     }
 
+    @Test
+    @DisplayName("Multiple Windows - Switch to new tab")
+    void multipleWindows() {
+        WindowsPage page = new WindowsPage(driver).open();
+        assertEquals("New Window", page.openNewWindowAndGetText());
+    }
 }
