@@ -46,4 +46,17 @@ class WidgetsTest extends BaseTest {
         String text = new DynamicLoadingPage(driver).open(example).startAndGetResult();
         assertEquals("Hello World!", text);
     }
+
+    @Test
+    @DisplayName("Upload a file successfully")
+    void fileUpload() {
+        FileUploadPage page = new FileUploadPage(driver).open();
+
+        // Lấy đường dẫn tuyệt đối của file config.properties để làm file tải lên thử
+        String filePath = System.getProperty("user.dir") + "/src/test/resources/config.properties";
+        page.uploadFile(filePath);
+
+        assertEquals("config.properties", page.getUploadedFileName());
+    }
+
 }
