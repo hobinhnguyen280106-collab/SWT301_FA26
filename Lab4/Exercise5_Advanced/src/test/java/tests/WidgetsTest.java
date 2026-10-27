@@ -79,4 +79,12 @@ class WidgetsTest extends BaseTest {
         HoversPage page = new HoversPage(driver).open();
         assertEquals("name: user1", page.hoverAndGetUserName());
     }
+
+    @Test
+    @DisplayName("Add/Remove Elements - Count dynamic elements")
+    void addRemoveElements() {
+        AddRemoveElementsPage page = new AddRemoveElementsPage(driver).open();
+        page.addElements(5);
+        assertEquals(5, page.getDeleteButtonsCount());
+    }
 }
