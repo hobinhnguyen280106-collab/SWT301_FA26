@@ -72,4 +72,11 @@ class WidgetsTest extends BaseTest {
         WindowsPage page = new WindowsPage(driver).open();
         assertEquals("New Window", page.openNewWindowAndGetText());
     }
+
+    @Test
+    @DisplayName("Hovers - Mouse hover to reveal text")
+    void hovers() {
+        HoversPage page = new HoversPage(driver).open();
+        assertEquals("name: user1", page.hoverAndGetUserName());
+    }
 }
