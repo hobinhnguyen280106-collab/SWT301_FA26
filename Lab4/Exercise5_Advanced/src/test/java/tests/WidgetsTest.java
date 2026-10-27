@@ -59,4 +59,11 @@ class WidgetsTest extends BaseTest {
         assertEquals("config.properties", page.getUploadedFileName());
     }
 
+    @Test
+    @DisplayName("Nested Frames - Switch and read text")
+    void nestedFrames() {
+        NestedFramesPage page = new NestedFramesPage(driver).open();
+        assertEquals("MIDDLE", page.getMiddleFrameText());
+    }
+
 }
